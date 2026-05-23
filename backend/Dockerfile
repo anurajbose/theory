@@ -5,7 +5,7 @@
 #   docker build -f backend/Dockerfile -t theory-api .
 # Railway: set the root directory to / and dockerfilePath to backend/Dockerfile.
 # ─────────────────────────────────────────────────────────────
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 
 # 1 · Install deps (cached layer)
@@ -22,7 +22,7 @@ RUN npx prisma generate --schema ./database/schema.prisma
 RUN npm run build
 
 # ─── Runtime image ───────────────────────────────────────────
-FROM node:20-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 

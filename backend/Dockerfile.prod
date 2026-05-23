@@ -1,13 +1,13 @@
 # Production image. Build context = repo ROOT (needs ../database).
 #   docker build -f backend/Dockerfile.prod -t theory-backend:prod .
 # ---- deps ----
-FROM node:20-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY backend/package*.json ./
 RUN npm ci
 
 # ---- build ----
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY backend/ ./
@@ -17,7 +17,7 @@ RUN npx prisma generate --schema=../database/schema.prisma \
  && npm prune --omit=dev
 
 # ---- runtime ----
-FROM node:20-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
