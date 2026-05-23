@@ -1,79 +1,122 @@
 <div align="center">
 
-# theory
+<!-- Animated wave banner (rendered server-side as an SVG by capsule-render) -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:5457E5,100:7C3AED&height=200&section=header&text=theory&fontSize=72&fontColor=ffffff&fontAlignY=38&desc=work%20intelligence%20that%20reads%20signals,%20not%20your%20notes&descSize=18&descAlignY=60&animation=fadeIn" alt="theory" width="100%" />
 
-**Work intelligence for teams that care about focus, not surveillance.**
+<br/>
 
-[![CI](https://github.com/anuraj/theory/actions/workflows/ci.yml/badge.svg)](https://github.com/anuraj/theory/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js 20](https://img.shields.io/badge/Node.js-20_LTS-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![PostgreSQL 15](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://postgresql.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+<!-- Animated typing headline (rendered as an animated SVG) -->
+<a href="https://github.com/anurajbose/theory">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=900&color=7C3AED&center=true&vCenter=true&width=620&lines=Employees+log+their+day%2C+privately.;Managers+see+the+signal%2C+never+the+notes.;Leadership+sees+org+health%2C+in+real+time.;Free.+Open+source.+Self-hostable." alt="What theory does" />
+</a>
+
+<br/>
+<br/>
+
+[![CI](https://github.com/anurajbose/theory/actions/workflows/ci.yml/badge.svg)](https://github.com/anurajbose/theory/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1f6feb.svg)](LICENSE)
+[![Self-host](https://img.shields.io/badge/self--host-3_commands-7c3aed)](#-quick-start--docker-3-commands)
+[![Node.js 20](https://img.shields.io/badge/node-20_LTS-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![PostgreSQL 15](https://img.shields.io/badge/postgres-15-4169E1?logo=postgresql&logoColor=white)](https://postgresql.org)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+<br/>
+
+**[Quick start](#-quick-start--docker-3-commands)** · **[Features](#-what-you-get)** · **[How signals work](#-how-signals-work-privacy-model)** · **[Self-host](#-local-dev-without-docker)** · **[Security](#-security)**
+
+<br/>
+
+<!-- ════════════════════════════════════════════════════════════════
+     DEMO GIF — the single most impactful thing you can add.
+     Record a 10-15s screen capture of the app (login → daily → board),
+     export as GIF or MP4, drop it in docs/demo.gif, then uncomment:
+─────────────────────────────────────────────────────────────────────
+<img src="docs/demo.gif" alt="theory in action" width="90%" />
+════════════════════════════════════════════════════════════════ -->
 
 </div>
 
 ---
 
-## What is theory?
+<div align="center">
 
-**theory** is a private work-intelligence platform for employees, managers, and leadership.  
-Every employee has an encrypted personal workspace. Signals travel up the hierarchy — raw content never does.
+> ### Status updates are theatre.
+> Nobody learns anything from *"on track."* The work is in the journal, the blockers, the half-finished board.
+> **theory** lets that work stay private — and turns it into honest signal automatically.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  theory  ·  9:12 AM  ·  Monday                                      │
-├────────────────────────┬────────────────────────────────────────────┤
-│  ◉ Daily               │  Good morning, Alex.                       │
-│  ☐ Work Board          │                                            │
-│  ☐ Follow-ups          │  ┌─ Today's focus ──────────────────────┐  │
-│  ☐ Time Log            │  │  Finish onboarding API review         │  │
-│  ☐ Meetings            │  │  Review PRs for auth module           │  │
-│  ☐ Ideas               │  └──────────────────────────────────────┘  │
-│  ☐ Knowledge Base      │                                            │
-│  ─────────────────────  │  Mood  ●●●●○  4/5  "Focused"              │
-│  ◉ Manager Console     │                                            │
-│  ◉ Org Intelligence    │  ┌─ AI Standup digest ──────────────────┐  │
-│  ◉ Admin               │  │  ✦ Yesterday: Shipped user-role fix   │  │
-│                        │  │  ✦ Today: API review + PR triage      │  │
-│                        │  │  ⚠ Blocker: Waiting on design sign-off│  │
-│                        │  └──────────────────────────────────────┘  │
-└────────────────────────┴────────────────────────────────────────────┘
-```
+</div>
 
----
-
-## How it helps
-
-| Who | What they see | What they get |
-|---|---|---|
-| **Employee** | Their own private workspace | Focus, log work, track follow-ups — no distractions |
-| **Manager** | Aggregated team signals | Spot blockers early, no need to interrupt the team |
-| **Leadership** | Org-wide health dashboard | Real-time mood, velocity, risk — without reading anyone's notes |
-| **Admin** | Full system control | Users, hierarchy, billing, custom branding |
-
----
-
-## Key features
+<br/>
 
 ```
-Private daily log         ── morning focus · mood · EOD note · encrypted journal
-Work Board (kanban)       ── TODO → IN PROGRESS → BLOCKED → DONE
-Follow-up tracker         ── reminders with owners, due dates, channels
-Time log                  ── per-task hours, weekly summaries
-Meeting notes             ── agenda, action items, decisions
-Idea bank                 ── proposals with upvotes
-Knowledge base            ── team wiki with rich text (TipTap)
-AI standup digest         ── one-click summary of your week
-Signal roll-up            ── weekly aggregated report sent to manager
-Manager console           ── team blocker, mood trend, overdue overview
-Org intelligence          ── cross-BU / department health for leadership
-Admin panel               ── org hierarchy, role management, branding
+        WITHOUT theory                              WITH theory
+   ──────────────────────────             ──────────────────────────────
+   ✕  status meeting, 30 min       →       ◍  one screen, 30 seconds
+   ✕  "what's everyone on?"        →       ◍  live signal, no asking
+   ✕  dashboards that surveil      →       ◍  aggregates, never raw notes
+   ✕  blockers found on Friday     →       ◍  blockers surface on Monday
+```
+
+<br/>
+
+## ◍ See it in one frame
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│  ◍ theory                                       Mon · 9:12 AM   ◉ Alex │
+├──────────────────────────┬────────────────────────────────────────────┤
+│  ◉  Daily                │   Good morning, Alex.                       │
+│  ▢  Work Board           │                                             │
+│  ▢  Follow-ups           │   ┌─ Today's focus ────────────────────┐    │
+│  ▢  Time Log             │   │  • Finish onboarding API review     │    │
+│  ▢  Meetings             │   │  • Review PRs for auth module       │    │
+│  ▢  Ideas                │   └─────────────────────────────────────┘    │
+│  ▢  Knowledge Base       │                                             │
+│  ──────────────────────  │   Mood   ●●●●○   4/5   "Focused"            │
+│  ◉  Manager Console      │                                             │
+│  ◉  Org Intelligence     │   ┌─ AI standup digest ────────────────┐    │
+│  ◉  Admin                │   │  ↑ Yesterday  shipped user-role fix │    │
+│                          │   │  → Today      API review + triage   │    │
+│                          │   │  ! Blocker    waiting on design ok  │    │
+│                          │   └─────────────────────────────────────┘    │
+└──────────────────────────┴────────────────────────────────────────────┘
 ```
 
 ---
 
-## Screens at a glance
+## ◍ What you get
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**For the individual**
+- Private **daily log** — focus, mood, EOD note
+- Encrypted **journal** (AES-256-GCM, never returned by any API)
+- Personal **kanban board** — TODO → DONE
+- **Follow-up** tracker with owners + due dates
+- **Time log** with weekly summaries
+- One-click **AI standup digest**
+
+</td>
+<td width="50%" valign="top">
+
+**For the org**
+- **Manager console** — blockers, mood, overdue at a glance
+- **Org intelligence** — cross-team / dept health
+- Weekly **signal roll-up** sent up the hierarchy
+- **Meetings**, **ideas**, and a team **knowledge base**
+- **Admin panel** — users, hierarchy, branding
+- Full **audit trail** on every privileged action
+
+</td>
+</tr>
+</table>
+
+---
+
+## ◍ Screens at a glance
 
 <table>
 <tr>
@@ -126,10 +169,10 @@ Admin panel               ── org hierarchy, role management, branding
 
 ---
 
-## Quick start — Docker (3 commands)
+## ◍ Quick start — Docker (3 commands)
 
 ```bash
-git clone https://github.com/<you>/theory
+git clone https://github.com/anurajbose/theory
 cd theory
 docker-compose up
 ```
@@ -149,7 +192,7 @@ Or **create your own account** at `http://localhost:3000/register` — the first
 
 ---
 
-## Create your account
+## ◍ Create your account
 
 theory has open registration. Visit `/register` to sign up with your name, email, and password.
 
@@ -159,7 +202,7 @@ theory has open registration. Visit `/register` to sign up with your name, email
 
 ---
 
-## Local dev (without Docker)
+## ◍ Local dev (without Docker)
 
 ```bash
 # 1 — Database + Redis
@@ -184,7 +227,7 @@ npm run dev                      # http://localhost:3000
 
 ---
 
-## Stack
+## ◍ Stack
 
 | Layer | Technology |
 |---|---|
@@ -206,7 +249,7 @@ npm run dev                      # http://localhost:3000
 
 ---
 
-## Roles
+## ◍ Roles
 
 | Role | Access |
 |---|---|
@@ -217,7 +260,7 @@ npm run dev                      # http://localhost:3000
 
 ---
 
-## How signals work (privacy model)
+## ◍ How signals work (privacy model)
 
 ```
 Employee                Manager                Leadership
@@ -234,7 +277,7 @@ Managers never see individual notes. Leadership never sees team details. The dat
 
 ---
 
-## API
+## ◍ API
 
 Base URL: `http://localhost:4000/api`
 
@@ -256,7 +299,7 @@ GET  /api/health              Liveness probe
 
 ---
 
-## Environment
+## ◍ Environment
 
 Copy `.env.example` to `backend/.env` and fill in the required values. Generate secrets with:
 
@@ -268,7 +311,7 @@ Optional services (OpenSearch, SMTP, AI, Turnstile, Razorpay) degrade gracefully
 
 ---
 
-## Security
+## ◍ Security
 
 - Journal stored AES-256-GCM encrypted; key derived from `JOURNAL_SECRET`
 - Journal field stripped from **every** API response at the ORM layer — zero accidental leakage
@@ -281,7 +324,7 @@ Optional services (OpenSearch, SMTP, AI, Turnstile, Razorpay) degrade gracefully
 
 ---
 
-## Project structure
+## ◍ Project structure
 
 ```
 /
@@ -310,7 +353,7 @@ Optional services (OpenSearch, SMTP, AI, Turnstile, Razorpay) degrade gracefully
 
 ---
 
-## Testing
+## ◍ Testing
 
 ```bash
 cd backend
@@ -322,12 +365,12 @@ CI runs the full suite against real Postgres + Redis on every push to `main`.
 
 ---
 
-## Contributing
+## ◍ Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) — setup guide, commit conventions, and PR process.
 
 ---
 
-## License
+## ◍ License
 
 MIT — see [LICENSE](LICENSE).
