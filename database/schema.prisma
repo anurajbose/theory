@@ -1,0 +1,862 @@
+// ============================================================
+// THEORY — Enterprise Work Intelligence Platform
+// Prisma schema — multi-tenant (CONTRACT phase)
+// tenant_id now REQUIRED on every owned model (audit_logs excepted:
+// pre-auth failed-login events have no tenant). Tenant-leading
+// composite indexes match the tenant-guard query shape.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  LEADERSHIP
+  ADMIN
+}
+
+enum JobRole {
+  BA
+  DEVELOPER
+  QA
+  PM
+  RISK_ORM
+  IT_GRC
+  INFOSEC
+  COMPLIANCE
+  SALES
+  COLLECTIONS
+  HR
+  CUSTOM
+}
+
+enum Priority {
+  P1
+  P2
+  P3
+  LOW
+}
+
+enum WorkItemStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum FollowUpStatus {
+  PENDING
+  REMINDED
+  WAITING
+  CLOSED
+}
+
+enum FollowUpChannel {
+  EMAIL
+  TEAMS
+  WHATSAPP
+  CALL
+}
+
+enum TimeCategory {
+  CR_WORK
+  TICKET
+  MEETING
+  DOCS
+  FOLLOW_UP
+  STRATEGIC
+  ADMIN
+  SUPPORT
+  ANALYSIS
+  TESTING
+  DEPLOY
+  OTHER
+}
+
+enum IdeaPriority {
+  HIGH
+  MEDIUM
+  LOW
+  PARKED
+}
+
+enum IdeaStatus {
+  IDEA
+  PROPOSED
+  APPROVED
+  SHELVED
+}
+
+enum NotificationType {
+  FOLLOW_UP_OVERDUE
+  SLA_BREACH
+  EOD_PROMPT
+  ANNOUNCEMENT
+  ACTION_DUE
+  STANDUP_MISSING
+  BLOCKER_ALERT
+  OVERLOAD_ALERT
+  WIN_SPOTLIGHT
+  SYSTEM
+}
+
+enum KBVisibility {
+  PERSONAL
+  TEAM
+  ORG
+}
+
+enum AnnouncementScope {
+  COMPANY
+  BU
+  DEPT
+  TEAM
+}
+
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum TenantPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ============================================================
+// TENANCY (hard isolation boundary)
+// ============================================================
+
+model Tenant {
+  id        String       @id @default(uuid())
+  name      String
+  slug      String       @unique
+  status    TenantStatus @default(TRIAL)
+  plan      TenantPlan   @default(FREE)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  deletedAt DateTime?    @map("deleted_at")
+  version   Int          @default(1)
+
+  ssoEnforced Boolean @default(false) @map("sso_enforced")
+  ssoDomain   String? @map("sso_domain")
+  clerkOrgId  String? @unique @map("clerk_org_id")
+
+  subscription    Subscription?
+  settings        TenantSettings?
+  companies       Company[]
+  businessUnits   BusinessUnit[]
+  departments     Department[]
+  teams           Team[]
+  users           User[]
+  refreshTokens   RefreshToken[]
+  dailyLogs       DailyLog[]
+  notifications   Notification[]
+  workItems       WorkItem[]
+  followUps       FollowUp[]
+  timeLogs        TimeLog[]
+  meetings        Meeting[]
+  ideas           Idea[]
+  teamSignals     TeamSignal[]
+  signalStates    SignalState[]
+  invisibleEffort InvisibleEffort[]
+  kbArticles      KnowledgeBase[]
+  announcements   Announcement[]
+  auditLogs       AuditLog[]
+  comments        Comment[]
+  activityEvents  ActivityEvent[]
+  aiAuditLogs     AiAuditLog[]
+  exportJobs      ExportJob[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("tenants")
+}
+
+model TenantSettings {
+  id                String   @id @default(uuid())
+  tenantId          String   @unique @map("tenant_id")
+  brandName         String   @default("theory") @map("brand_name")
+  logoUrl           String?  @map("logo_url")
+  primaryColor      String   @default("#5457E5") @map("primary_color")
+  accentColor       String?  @map("accent_color")
+  loginTagline      String?  @map("login_tagline")
+  features          Json     @default("{}")
+  dataRetentionDays Int      @default(365) @map("data_retention_days")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+// ============================================================
+// HIERARCHY (tenant-scoped; Company optional under Tenant)
+// ============================================================
+
+model Company {
+  id            String         @id @default(uuid())
+  tenantId      String?        @map("tenant_id")
+  name          String
+  logoUrl       String?        @map("logo_url")
+  primaryColor  String?        @map("primary_color")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime?      @map("deleted_at")
+  version       Int            @default(1)
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  businessUnits BusinessUnit[]
+
+  @@index([tenantId])
+  @@map("companies")
+}
+
+model BusinessUnit {
+  id          String       @id @default(uuid())
+  tenantId    String?      @map("tenant_id")
+  name        String
+  companyId   String       @map("company_id")
+  headId      String?      @map("head_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+  version     Int          @default(1)
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  head        User?        @relation("BUHead", fields: [headId], references: [id])
+  departments Department[]
+
+  @@index([tenantId])
+  @@index([tenantId, companyId])
+  @@map("business_units")
+}
+
+model Department {
+  id        String       @id @default(uuid())
+  tenantId  String?      @map("tenant_id")
+  name      String
+  buId      String       @map("bu_id")
+  headId    String?      @map("head_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime?    @map("deleted_at")
+  version   Int          @default(1)
+  tenant    Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bu        BusinessUnit @relation(fields: [buId], references: [id], onDelete: Cascade)
+  head      User?        @relation("DeptHead", fields: [headId], references: [id])
+  teams     Team[]
+  users     User[]       @relation("UserDept")
+
+  @@index([tenantId])
+  @@index([tenantId, buId])
+  @@map("departments")
+}
+
+model Team {
+  id          String       @id @default(uuid())
+  tenantId    String?      @map("tenant_id")
+  name        String
+  deptId      String       @map("dept_id")
+  managerId   String?      @map("manager_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+  version     Int          @default(1)
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dept        Department   @relation(fields: [deptId], references: [id], onDelete: Cascade)
+  manager     User?        @relation("TeamManager", fields: [managerId], references: [id])
+  members     User[]       @relation("UserTeam")
+  teamSignals TeamSignal[]
+
+  @@index([tenantId])
+  @@index([tenantId, deptId])
+  @@map("teams")
+}
+
+// ============================================================
+// USERS / AUTH
+// ============================================================
+
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String?   @map("tenant_id")
+  name         String
+  email        String
+  passwordHash String    @map("password_hash")
+  role         Role      @default(EMPLOYEE)
+  jobRole      JobRole?  @map("job_role")
+  deptId       String?   @map("dept_id")
+  teamId       String?   @map("team_id")
+  managerId    String?   @map("manager_id")
+  onboarded    Boolean   @default(false)
+  active       Boolean   @default(true)
+  avatarUrl    String?   @map("avatar_url")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+  version      Int       @default(1)
+
+  mfaEnabled       Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret        String?   @map("mfa_secret") // AES-256-GCM encrypted
+  pwResetTokenHash String?   @map("pw_reset_token_hash")
+  pwResetExpiresAt DateTime? @map("pw_reset_expires_at")
+  clerkUserId      String?   @unique @map("clerk_user_id")
+
+  tenant  Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dept    Department? @relation("UserDept", fields: [deptId], references: [id])
+  team    Team?       @relation("UserTeam", fields: [teamId], references: [id])
+  manager User?       @relation("ManagerReports", fields: [managerId], references: [id])
+  reports User[]      @relation("ManagerReports")
+
+  managedTeams Team[]         @relation("TeamManager")
+  headedDepts  Department[]   @relation("DeptHead")
+  headedBUs    BusinessUnit[] @relation("BUHead")
+
+  dailyLogs       DailyLog[]
+  workItems       WorkItem[]
+  followUps       FollowUp[]
+  timeLogs        TimeLog[]
+  meetings        Meeting[]
+  ideas           Idea[]
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+  invisibleEffort InvisibleEffort[]
+  kbArticles      KnowledgeBase[]
+  announcements   Announcement[]
+  auditLogs       AuditLog[]
+  comments        Comment[]
+  activityEvents  ActivityEvent[]
+  aiAuditLogs     AiAuditLog[]
+  exportJobs      ExportJob[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([tenantId, managerId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  tenantId   String?   @map("tenant_id")
+  userId     String    @map("user_id")
+  tokenHash  String    @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  userAgent  String?   @map("user_agent")
+  ip         String?   @map("ip")
+  lastUsedAt DateTime? @map("last_used_at")
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@map("refresh_tokens")
+}
+
+// ============================================================
+// SPRINT 1 — DAILY + NOTIFICATIONS
+// ============================================================
+
+model DailyLog {
+  id        String    @id @default(uuid())
+  tenantId  String?   @map("tenant_id")
+  userId    String    @map("user_id")
+  date      DateTime  @db.Date
+  focusText String?   @map("focus_text")
+  journal   String? // AES-256-GCM encrypted, NEVER returned by any API or AI
+  moodScore Int?      @map("mood_score")
+  eodNote   String?   @map("eod_note")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(1)
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@map("daily_logs")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  tenantId  String?          @map("tenant_id")
+  userId    String           @map("user_id")
+  type      NotificationType
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+  deletedAt DateTime?        @map("deleted_at")
+  version   Int              @default(1)
+  tenant    Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([tenantId])
+  @@index([tenantId, userId, read])
+  @@map("notifications")
+}
+
+// ============================================================
+// SPRINT 2 — EMPLOYEE WORKSPACE
+// ============================================================
+
+model WorkItem {
+  id           String         @id @default(uuid())
+  tenantId     String?        @map("tenant_id")
+  userId       String         @map("user_id")
+  sectionType  String         @map("section_type")
+  title        String
+  description  String?
+  priority     Priority       @default(P3)
+  status       WorkItemStatus @default(TODO)
+  dueDate      DateTime?      @map("due_date")
+  slaDate      DateTime?      @map("sla_date")
+  tags         String[]       @default([])
+  effortTags   Json           @default("[]") @map("effort_tags")
+  linkedItemId String?        @map("linked_item_id")
+  notesLog     Json           @default("[]") @map("notes_log")
+  metadata     Json           @default("{}")
+  blockedAt    DateTime?      @map("blocked_at")
+  closedAt     DateTime?      @map("closed_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  deletedAt    DateTime?      @map("deleted_at")
+  version      Int            @default(1)
+
+  tenant     Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedItem WorkItem?       @relation("WorkItemLink", fields: [linkedItemId], references: [id])
+  linkedFrom WorkItem[]      @relation("WorkItemLink")
+  timeLogs   TimeLog[]
+  kbArticles KnowledgeBase[]
+  ideaLinks  Idea[]          @relation("IdeaToCR")
+
+  @@index([userId, status])
+  @@index([userId, sectionType])
+  @@index([slaDate])
+  @@index([tenantId])
+  @@index([tenantId, userId, status])
+  @@index([tenantId, slaDate])
+  @@map("work_items")
+}
+
+model FollowUp {
+  id        String          @id @default(uuid())
+  tenantId  String?         @map("tenant_id")
+  userId    String          @map("user_id")
+  person    String
+  topic     String
+  dueDate   DateTime?       @map("due_date")
+  channel   FollowUpChannel
+  status    FollowUpStatus  @default(PENDING)
+  notes     String?
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  deletedAt DateTime?       @map("deleted_at")
+  version   Int             @default(1)
+  tenant    Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([tenantId])
+  @@index([tenantId, userId, status])
+  @@map("follow_ups")
+}
+
+model TimeLog {
+  id           String       @id @default(uuid())
+  tenantId     String?      @map("tenant_id")
+  userId       String       @map("user_id")
+  workItemId   String?      @map("work_item_id")
+  task         String
+  category     TimeCategory
+  startTime    DateTime     @map("start_time")
+  endTime      DateTime?    @map("end_time")
+  durationMins Int?         @map("duration_mins")
+  date         DateTime     @db.Date
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at")
+  deletedAt    DateTime?    @map("deleted_at")
+  version      Int          @default(1)
+
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workItem WorkItem? @relation(fields: [workItemId], references: [id])
+
+  @@index([userId, date])
+  @@index([tenantId])
+  @@index([tenantId, userId, date])
+  @@map("time_logs")
+}
+
+model Meeting {
+  id          String    @id @default(uuid())
+  tenantId    String?   @map("tenant_id")
+  userId      String    @map("user_id")
+  title       String
+  date        DateTime
+  attendees   String[]  @default([])
+  agenda      String?
+  decisions   String?
+  actionItems Json      @default("[]") @map("action_items")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  version     Int       @default(1)
+  tenant      Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([tenantId])
+  @@index([tenantId, userId, date])
+  @@map("meetings")
+}
+
+model Idea {
+  id         String       @id @default(uuid())
+  tenantId   String?      @map("tenant_id")
+  userId     String       @map("user_id")
+  title      String
+  problem    String?
+  value      String?
+  priority   IdeaPriority @default(MEDIUM)
+  status     IdeaStatus   @default(IDEA)
+  source     String?
+  linkedCrId String?      @map("linked_cr_id")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  deletedAt  DateTime?    @map("deleted_at")
+  version    Int          @default(1)
+
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedCr WorkItem? @relation("IdeaToCR", fields: [linkedCrId], references: [id])
+
+  @@index([userId, status])
+  @@index([tenantId])
+  @@index([tenantId, userId, status])
+  @@map("ideas")
+}
+
+// ============================================================
+// SPRINT 3 — MANAGER + LEADERSHIP SIGNALS
+// ============================================================
+
+model TeamSignal {
+  id            String    @id @default(uuid())
+  tenantId      String?   @map("tenant_id")
+  teamId        String    @map("team_id")
+  date          DateTime  @db.Date
+  blockerCount  Int       @default(0) @map("blocker_count")
+  slaCompliance Float     @default(100) @map("sla_compliance")
+  healthScore   Int       @default(100) @map("health_score")
+  workloadData  Json      @default("{}") @map("workload_data")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  version       Int       @default(1)
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, date])
+  @@index([tenantId])
+  @@index([tenantId, teamId])
+  @@map("team_signals")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Signal lifecycle — state attached to derived signals.
+// (Signals themselves are computed, not stored.)
+// ─────────────────────────────────────────────────────────────
+model SignalState {
+  id            String    @id @default(uuid())
+  tenantId      String    @map("tenant_id")
+  signalId      String    @map("signal_id")
+  state         String    @default("OPEN") // OPEN | ACK | SNOOZED | RESOLVED | DISMISSED
+  snoozedUntil  DateTime? @map("snoozed_until")
+  resolvedAt    DateTime? @map("resolved_at")
+  ackedBy       String?   @map("acked_by")
+  resolvedBy    String?   @map("resolved_by")
+  feedback      Int?      @db.SmallInt
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, signalId])
+  @@index([tenantId, state])
+  @@map("signal_states")
+}
+
+// ============================================================
+// SPRINT 4 — INTELLIGENCE + ADMIN
+// ============================================================
+
+model InvisibleEffort {
+  id        String    @id @default(uuid())
+  tenantId  String?   @map("tenant_id")
+  userId    String    @map("user_id")
+  weekStart DateTime  @map("week_start") @db.Date
+  score     Int       @default(0)
+  breakdown Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(1)
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@map("invisible_effort")
+}
+
+model KnowledgeBase {
+  id           String       @id @default(uuid())
+  tenantId     String?      @map("tenant_id")
+  userId       String       @map("user_id")
+  title        String
+  category     String?
+  content      Json
+  tags         String[]     @default([])
+  visibility   KBVisibility @default(PERSONAL)
+  linkedItemId String?      @map("linked_item_id")
+  viewCount    Int          @default(0) @map("view_count")
+  version      Int          @default(1)
+  pinned       Boolean      @default(false)
+  versions     Json         @default("[]")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  deletedAt    DateTime?    @map("deleted_at")
+
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedItem WorkItem? @relation(fields: [linkedItemId], references: [id])
+
+  @@index([visibility])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([tenantId, visibility])
+  @@map("knowledge_base")
+}
+
+model Announcement {
+  id          String            @id @default(uuid())
+  tenantId    String?           @map("tenant_id")
+  authorId    String            @map("author_id")
+  scopeType   AnnouncementScope @map("scope_type")
+  scopeId     String?           @map("scope_id")
+  title       String
+  body        String
+  attachments Json              @default("[]")
+  isUrgent    Boolean           @default(false) @map("is_urgent")
+  ackRequired Boolean           @default(false) @map("ack_required")
+  scheduledAt DateTime?         @map("scheduled_at")
+  acks        Json              @default("{}")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
+  version     Int               @default(1)
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  author User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([scopeType, scopeId])
+  @@index([tenantId])
+  @@index([tenantId, scopeType, scopeId])
+  @@map("announcements")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String?  @map("tenant_id") // nullable BY DESIGN: pre-auth failed-login events
+  userId    String?  @map("user_id")
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  before    Json?
+  after     Json?
+  timestamp DateTime @default(now())
+  ip        String?
+  userAgent String?  @map("user_agent")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([userId, timestamp])
+  @@index([tenantId, timestamp])
+  @@map("audit_logs")
+}
+
+// ============================================================
+// SPRINT 12 — COLLABORATION
+// ============================================================
+
+model Comment {
+  id         String    @id @default(uuid())
+  tenantId   String?   @map("tenant_id")
+  authorId   String    @map("author_id")
+  entityType String    @map("entity_type") // WorkItem | FollowUp | Meeting | Idea | KnowledgeBase
+  entityId   String    @map("entity_id")
+  body       String
+  mentions   String[]  @default([]) // mentioned user ids (same tenant)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+  version    Int       @default(1)
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  author User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, authorId])
+  @@map("comments")
+}
+
+model ActivityEvent {
+  id         String   @id @default(uuid())
+  tenantId   String?  @map("tenant_id")
+  actorId    String   @map("actor_id")
+  verb       String // created | updated | commented | mentioned | closed ...
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  summary    String
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor  User    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, actorId])
+  @@map("activity_events")
+}
+
+// ============================================================
+// SPRINT 16 — AI GOVERNANCE
+// ============================================================
+
+// Global, system-managed prompt registry (NOT tenant-scoped, NOT in the
+// Prisma tenant-guard OWNED set — accessed via rawPrisma). No ad-hoc prompts:
+// every AI call must reference a registered, versioned prompt.
+model AiPrompt {
+  id        String   @id @default(uuid())
+  key       String   @map("key")
+  version   Int      @default(1)
+  name      String
+  template  String
+  model     String   @default("disabled")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([key, version])
+  @@index([key, active])
+  @@map("ai_prompts")
+}
+
+// Append-only per-tenant AI usage ledger (in OWNED; excluded from
+// SOFT_DELETABLE/VERSIONED like AuditLog — no deleted_at/version).
+model AiAuditLog {
+  id                String   @id @default(uuid())
+  tenantId          String?  @map("tenant_id")
+  userId            String?  @map("user_id")
+  promptKey         String   @map("prompt_key")
+  promptVersion     Int      @map("prompt_version")
+  model             String
+  status            String // ok | blocked | error | fallback
+  inputTokens       Int      @default(0) @map("input_tokens")
+  outputTokens      Int      @default(0) @map("output_tokens")
+  costUsd           Float    @default(0) @map("cost_usd")
+  latencyMs         Int      @default(0) @map("latency_ms")
+  confidence        Float?   @map("confidence")
+  moderationFlagged Boolean  @default(false) @map("moderation_flagged")
+  redactedFields    String[] @default([]) @map("redacted_fields")
+  reason            String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, promptKey])
+  @@map("ai_audit_logs")
+}
+
+// ============================================================
+// SPRINT 18 — EXPORTS
+// ============================================================
+
+// Async export jobs. Status-mutable (no soft-delete/version) → registered in
+// guard OWNED but listed APPEND_ONLY (no deleted_at/version columns).
+model ExportJob {
+  id          String    @id @default(uuid())
+  tenantId    String?   @map("tenant_id")
+  userId      String    @map("user_id")
+  type        String // workitems | followups | timelogs | activity
+  format      String // csv | json
+  status      String    @default("PENDING") // PENDING|PROCESSING|READY|FAILED
+  filters     Json      @default("{}")
+  rowCount    Int       @default(0) @map("row_count")
+  fileKey     String?   @map("file_key")
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+  expiresAt   DateTime? @map("expires_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, createdAt])
+  @@index([tenantId, status])
+  @@map("export_jobs")
+}
+
+// ============================================================
+// SPRINT 19 — BILLING
+// ============================================================
+
+// 1:1 with Tenant. Mutable (no soft-delete/version) → OWNED + APPEND_ONLY.
+model Subscription {
+  id               String     @id @default(uuid())
+  tenantId         String     @unique @map("tenant_id")
+  provider         String     @default("manual") // stripe | razorpay | manual
+  externalId       String?    @map("external_id")
+  plan             TenantPlan @default(FREE)
+  status           String     @default("trialing") // trialing|active|past_due|canceled
+  seats            Int        @default(0)
+  currentPeriodEnd DateTime?  @map("current_period_end")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([provider, externalId])
+  @@map("subscriptions")
+}

@@ -1,0 +1,70 @@
+name: Deploy
+
+# Continuous deployment on green main:
+#   • frontend (Vite SPA) → Vercel
+#   • backend (Express) → Railway
+# Both deploy steps are env-gated on secrets, so a fresh fork stays safe.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Frontend → Vercel (production)
+  # Required repo secrets:
+  #   VERCEL_TOKEN  · VERCEL_ORG_ID · VERCEL_PROJECT_ID
+  #   (optional)    VITE_CLERK_PUBLISHABLE_KEY, VITE_GOOGLE_CLIENT_ID,
+  #                 VITE_TURNSTILE_SITE_KEY
+  # ─────────────────────────────────────────────────────────────
+  vercel:
+    runs-on: ubuntu-latest
+    if: ${{ env.HAS_VERCEL == 'true' }}
+    env:
+      HAS_VERCEL: ${{ secrets.VERCEL_TOKEN != '' && 'true' || 'false' }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm', cache-dependency-path: frontend/package-lock.json }
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+      - name: Pull Vercel env (production)
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build with Vercel CLI
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy prebuilt to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # ─────────────────────────────────────────────────────────────
+  # Backend → Railway
+  # Required repo secrets:
+  #   RAILWAY_TOKEN · RAILWAY_SERVICE  (the service id, not the project)
+  # Railway builds from backend/Dockerfile per backend/railway.json.
+  # ─────────────────────────────────────────────────────────────
+  railway:
+    runs-on: ubuntu-latest
+    if: ${{ env.HAS_RAILWAY == 'true' }}
+    env:
+      HAS_RAILWAY: ${{ secrets.RAILWAY_TOKEN != '' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+      - name: Deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service ${{ secrets.RAILWAY_SERVICE }} --detach

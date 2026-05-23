@@ -1,0 +1,634 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   PULSE v2 DESIGN SYSTEM — Linear × Glass × Notion
+   Accent: Indigo (#6366f1) ·  Dark-first · Glass elevated surfaces
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Light mode tokens ─────────────────────────────────────── */
+:root {
+  /* Editorial light — warm paper, near-black ink, hairline rules.
+     Accent unifies with the tenant brand (set by ThemeProvider). */
+  --m3-bg:          #fafaf9;
+  --m3-surf0:       #ffffff;
+  --m3-surf1:       #f6f6f5;
+  --m3-surf2:       #f0f0ef;
+  --m3-surf3:       #e7e7e4;
+  --m3-surf4:       #dededb;
+
+  --m3-on-surf:     #0a0a0a;
+  --m3-on-surf-var: #57575e;
+
+  --m3-primary:     var(--brand-primary, #4f46e5);
+  --m3-on-primary:  #ffffff;
+  --m3-prim-c:      color-mix(in srgb, var(--brand-primary, #4f46e5) 10%, #ffffff);
+  --m3-on-prim-c:   color-mix(in srgb, var(--brand-primary, #4f46e5) 72%, #000000);
+
+  --m3-secondary:   #0d9488;
+  --m3-sec-c:       #ccfbf1;
+
+  --m3-outline:     #d4d4d1;
+  --m3-outline-v:   #e9e9e6;
+
+  --m3-success:     #059669;
+  --m3-warning:     #d97706;
+  --m3-error:       #dc2626;
+  --m3-error-c:     #fee2e2;
+  --m3-on-error:    #ffffff;
+
+  --ambient-1:      rgba(124,58,237,0.07);
+  --ambient-2:      rgba(6,182,212,0.05);
+  --elevated:       rgba(10,10,10,0.025);
+
+  /* Neutral, editorial state layers (not tinted) */
+  --state-hover:    rgba(10,10,10,0.04);
+  --state-pressed:  rgba(10,10,10,0.07);
+  --state-focus:    color-mix(in srgb, var(--brand-primary, #4f46e5) 14%, transparent);
+  --ring:           color-mix(in srgb, var(--brand-primary, #4f46e5) 45%, transparent);
+
+  --glass-bg:       rgba(255,255,255,0.72);
+  --glass-border:   rgba(10,10,10,0.06);
+
+  /* Soft, low-spread elevation (no glow) */
+  --elev-1: 0 1px 2px rgba(10,10,10,0.04), 0 1px 3px rgba(10,10,10,0.04);
+  --elev-2: 0 4px 12px -2px rgba(10,10,10,0.08), 0 2px 6px -2px rgba(10,10,10,0.05);
+  --elev-3: 0 24px 60px -16px rgba(10,10,10,0.16), 0 8px 24px -10px rgba(10,10,10,0.10);
+
+  --sb-thumb: #d4d4d1;
+  --sb-track: transparent;
+}
+
+/* ── Dark mode tokens ──────────────────────────────────────── */
+.dark {
+  /* ── THEORY premium dark — operational-intelligence identity.
+     Deep space-navy canvas, layered translucent surfaces, calm ink.
+     Accent stays tenant-aware but defaults to the THEORY violet. ── */
+  --m3-bg:          #050816;
+  --m3-surf0:       #0B1020;
+  --m3-surf1:       #0E1426;
+  --m3-surf2:       #121A30;
+  --m3-surf3:       #18233E;
+  --m3-surf4:       #20304F;
+
+  --m3-on-surf:     #F8FAFC;
+  --m3-on-surf-var: #94A3B8;
+
+  --m3-primary:     var(--brand-primary, #7C3AED);
+  --m3-on-primary:  #FFFFFF;
+  --m3-prim-c:      color-mix(in srgb, var(--brand-primary, #7C3AED) 18%, #050816);
+  --m3-on-prim-c:   color-mix(in srgb, var(--brand-primary, #7C3AED) 60%, #F8FAFC);
+
+  --m3-secondary:   #06B6D4;
+  --m3-sec-c:       color-mix(in srgb, #06B6D4 16%, #050816);
+
+  --m3-outline:     rgba(255,255,255,0.14);
+  --m3-outline-v:   rgba(255,255,255,0.08);
+
+  --m3-success:     #10B981;
+  --m3-warning:     #F59E0B;
+  --m3-error:       #EF4444;
+  --m3-error-c:     color-mix(in srgb, #EF4444 18%, #050816);
+  --m3-on-error:    #FFFFFF;
+
+  /* Ambient — used by depth/lighting primitives */
+  --ambient-1:      rgba(124,58,237,0.16);
+  --ambient-2:      rgba(6,182,212,0.12);
+  --elevated:       rgba(255,255,255,0.05);
+
+  /* State layers — restrained, light-on-dark */
+  --state-hover:    rgba(255,255,255,0.05);
+  --state-pressed:  rgba(255,255,255,0.09);
+  --state-focus:    color-mix(in srgb, var(--brand-primary, #7C3AED) 24%, transparent);
+  --ring:           color-mix(in srgb, var(--brand-primary, #7C3AED) 60%, transparent);
+
+  /* Floating glass — premium, not cheap; low blur, real border */
+  --glass-bg:       rgba(11,16,32,0.66);
+  --glass-border:   rgba(255,255,255,0.08);
+
+  /* Cinematic elevation — soft, deep, no glow spam */
+  --elev-1: 0 1px 2px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+  --elev-2: 0 8px 30px -6px rgba(0,0,0,0.6), 0 2px 8px -2px rgba(0,0,0,0.45);
+  --elev-3: 0 24px 60px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.5);
+
+  --sb-thumb: rgba(255,255,255,0.12);
+  --sb-track: transparent;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background: var(--m3-bg);
+    color: var(--m3-on-surf);
+    font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.011em;
+    line-height: 1.6;
+    transition: background 0.25s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
+    font-weight: 600;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  input, textarea, select, button { @apply font-sans; }
+
+  /* ── Keyboard focus — single, consistent ring ── */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  :focus:not(:focus-visible) { outline: none; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--m3-on-surf) 28%, transparent);
+    background-clip: padding-box;
+  }
+
+  /* ── Selection ── */
+  ::selection {
+    background: color-mix(in srgb, var(--brand-primary, #4f46e5) 24%, transparent);
+    color: var(--m3-on-surf);
+  }
+}
+
+/* ── Components ────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Cards ── */
+  .card {
+    background: var(--m3-surf0);
+    border-radius: 14px;
+    border: 1px solid var(--m3-outline-v);
+    padding: 20px;
+    box-shadow: var(--elev-1);
+  }
+  .card-container {
+    background: var(--m3-surf2);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .card-filled {
+    background: var(--m3-prim-c);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .card-outlined {
+    background: var(--m3-surf0);
+    border: 1px solid var(--m3-outline-v);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  /* ── Glass surface ── */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* ── Buttons ── */
+  .btn-filled {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 rounded-xl font-semibold text-sm
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none;
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+    box-shadow: var(--elev-1),
+                inset 0 1px 0 rgba(255,255,255,0.10);
+    letter-spacing: 0.005em;
+  }
+  .btn-filled:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: var(--elev-2),
+                0 6px 18px -6px color-mix(in srgb, var(--m3-primary) 55%, transparent),
+                inset 0 1px 0 rgba(255,255,255,0.10);
+    transform: translateY(-1px);
+  }
+  .btn-filled:active:not(:disabled) {
+    transform: scale(0.97) translateY(0);
+  }
+
+  .btn-tonal {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 rounded-xl font-semibold text-sm
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none;
+    background: var(--m3-prim-c);
+    color: var(--m3-primary);
+  }
+  .btn-tonal:hover:not(:disabled) {
+    filter: brightness(0.96);
+    transform: translateY(-1px);
+  }
+  .btn-tonal:active:not(:disabled) { transform: scale(0.97); }
+
+  .btn-outlined {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 rounded-xl font-semibold text-sm
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none;
+    background: transparent;
+    color: var(--m3-primary);
+    border: 1px solid var(--m3-outline-v);
+  }
+  .btn-outlined:hover:not(:disabled) {
+    background: var(--state-hover);
+    border-color: var(--m3-primary);
+    transform: translateY(-1px);
+  }
+
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 rounded-xl font-medium text-sm
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none;
+    background: transparent;
+    color: var(--m3-primary);
+  }
+  .btn-text:hover:not(:disabled) { background: var(--state-hover); }
+
+  /* Legacy aliases */
+  .btn-primary   { @apply btn-filled;   font-size: 14px; }
+  .btn-secondary { @apply btn-outlined; font-size: 14px; }
+
+  /* ── Text fields ── */
+  .field {
+    @apply w-full rounded-xl px-3.5 py-2.5 outline-none transition-all duration-150;
+    font-size: 14px;
+    line-height: 20px;
+    background: var(--m3-surf2);
+    color: var(--m3-on-surf);
+    border: 1px solid var(--m3-outline-v);
+  }
+  .field::placeholder { color: var(--m3-on-surf-var); opacity: 0.55; }
+  .field:focus {
+    border-color: var(--m3-primary);
+    background: var(--m3-surf1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--m3-primary) 15%, transparent);
+  }
+  .input { @apply field resize-none; }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.3px;
+  }
+  .badge-p1 {
+    @apply badge;
+    background: color-mix(in srgb, #dc2626 12%, transparent);
+    color: #b91c1c;
+  }
+  .dark .badge-p1 {
+    background: color-mix(in srgb, #f87171 15%, transparent);
+    color: #fca5a5;
+  }
+  .badge-p2 {
+    @apply badge;
+    background: color-mix(in srgb, #d97706 12%, transparent);
+    color: #92400e;
+  }
+  .dark .badge-p2 {
+    background: color-mix(in srgb, #f59e0b 15%, transparent);
+    color: #fcd34d;
+  }
+  .badge-p3 {
+    @apply badge;
+    background: var(--m3-prim-c);
+    color: var(--m3-on-prim-c);
+  }
+  .badge-low {
+    @apply badge;
+    background: var(--m3-surf3);
+    color: var(--m3-on-surf-var);
+  }
+
+  .nav-indicator {
+    @apply rounded-lg transition-all duration-200;
+    background: var(--m3-prim-c);
+  }
+}
+
+/* ── Skeleton shimmer ──────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--m3-surf2) 25%,
+    var(--m3-surf3) 50%,
+    var(--m3-surf2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Hover lift ─────────────────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-2);
+}
+
+/* ── Focus ring ─────────────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--m3-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Theme transition ───────────────────────────────────────── */
+.theme-transition {
+  transition: background 0.25s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ── Gradient text ──────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--m3-primary) 0%, var(--m3-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Subtle inset surface (for inputs inside cards) ─────────── */
+.inset-surface {
+  background: var(--m3-bg);
+  border: 1px solid var(--m3-outline-v);
+  border-radius: 10px;
+}
+
+/* ── Glow effect ────────────────────────────────────────────── */
+.glow-primary {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--m3-primary) 25%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DOT-MATRIX CANVAS — cofounder.co-inspired (original execution)
+   A faint engineered dot grid on a deep canvas, radially masked so
+   it dissolves toward the edges and never competes with content.
+   ═══════════════════════════════════════════════════════════════ */
+.dot-canvas {
+  background-color: #050816;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Absolutely-positioned grid layer — drop inside a relative parent. */
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.085) 1px, transparent 1.4px);
+  background-size: 24px 24px;
+  background-position: center;
+  -webkit-mask-image: radial-gradient(ellipse 72% 58% at 50% 26%, #000 0%, rgba(0,0,0,0.55) 46%, transparent 74%);
+          mask-image: radial-gradient(ellipse 72% 58% at 50% 26%, #000 0%, rgba(0,0,0,0.55) 46%, transparent 74%);
+}
+
+/* Brand-tinted variant — dots pick up the tenant accent. */
+.dot-grid-brand {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--brand-primary, #5457E5) 42%, transparent) 1px,
+    transparent 1.4px
+  );
+}
+
+/* Larger, quieter field — good for long scroll sections. */
+.dot-grid-wide {
+  background-size: 34px 34px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1.4px);
+}
+
+/* A second offset layer creates a subtle moiré depth (optional). */
+.dot-grid-2x {
+  background-image:
+    radial-gradient(rgba(255,255,255,0.075) 1px, transparent 1.4px),
+    radial-gradient(color-mix(in srgb, var(--brand-primary,#5457E5) 26%, transparent) 1px, transparent 1.4px);
+  background-size: 24px 24px, 96px 96px;
+  background-position: 0 0, 12px 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dot-drift { animation: dotDrift 26s linear infinite; }
+}
+@keyframes dotDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 24px 24px; }
+}
+
+/* Light-mode in-app whisper grid — adapts to the editorial canvas. */
+.dot-grid-app {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--m3-on-surf) 7%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 0%, transparent 70%);
+          mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 0%, transparent 70%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN-SYSTEM PRIMITIVES — reusable spatial / depth / motion
+   The cinematic layer: ambient lighting, floating surfaces,
+   editorial type rhythm, restrained motion. Token-driven.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Ambient depth — soft volumetric lighting behind content.
+   Two low-opacity color fields, no harsh gradients. ── */
+.ambient-scene { position: relative; isolation: isolate; }
+.ambient-scene::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 60%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 80% at 22% 0%, var(--ambient-1) 0%, transparent 60%),
+    radial-gradient(50% 70% at 88% 12%, var(--ambient-2) 0%, transparent 62%);
+  filter: blur(8px);
+}
+.ambient-scene > * { position: relative; z-index: 1; }
+
+/* ── Floating surface — the core elevated panel.
+   Translucent, real border, cinematic shadow. Not cheap glass. ── */
+.surface {
+  background: var(--m3-surf0);
+  border: 1px solid var(--m3-outline-v);
+  border-radius: 16px;
+  box-shadow: var(--elev-1);
+}
+.surface-float {
+  background: color-mix(in srgb, var(--m3-surf0) 86%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+          backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--elev-2);
+}
+.surface-raised {
+  background: var(--m3-surf1);
+  border: 1px solid var(--m3-outline-v);
+  border-radius: 18px;
+  box-shadow: var(--elev-3);
+}
+/* Subtle top-edge sheen — premium lighting, very low opacity */
+.surface-lit { position: relative; }
+.surface-lit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 18%);
+}
+
+/* ── Editorial / cinematic typography scale ── */
+.text-display {
+  font-size: clamp(2.4rem, 5vw, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.text-hero {
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.text-metric {
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.text-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--m3-on-surf-var);
+}
+.measure { max-width: 62ch; }
+.measure-tight { max-width: 46ch; }
+
+/* ── Keyboard hint chip (command palette, shortcuts) ── */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--m3-on-surf-var);
+  background: var(--elevated);
+  border: 1px solid var(--m3-outline-v);
+  border-radius: 6px;
+}
+
+/* ── Live signal dot — operational status indicator ── */
+.signal {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--m3-success);
+}
+.signal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .signal::after { animation: signalPulse 2.4s ease-out infinite; }
+}
+@keyframes signalPulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(2.6); opacity: 0;   }
+  100% { opacity: 0; }
+}
+
+/* ── Restrained entrance motion ── */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-rise {
+    animation: fadeRise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+@keyframes fadeRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hairline divider — editorial section separation ── */
+.rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--m3-outline-v) 12%, var(--m3-outline-v) 88%, transparent);
+}
+
+/* ── Interactive lift — tactile, calm (no bounce) ── */
+.lift {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-2);
+  border-color: color-mix(in srgb, var(--m3-primary) 32%, var(--m3-outline-v));
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift, .lift:hover { transform: none; transition: none; }
+  .fade-rise { animation: none; }
+}

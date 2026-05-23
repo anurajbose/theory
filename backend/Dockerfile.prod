@@ -1,0 +1,32 @@
+# Production image. Build context = repo ROOT (needs ../database).
+#   docker build -f backend/Dockerfile.prod -t theory-backend:prod .
+# ---- deps ----
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY backend/package*.json ./
+RUN npm ci
+
+# ---- build ----
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY backend/ ./
+COPY database/ ../database/
+RUN npx prisma generate --schema=../database/schema.prisma \
+ && npm run build \
+ && npm prune --omit=dev
+
+# ---- runtime ----
+FROM node:20-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/../database /database
+USER app
+EXPOSE 4000
+# migrate (forward-only, guarded) then start the compiled server
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=/database/schema.prisma && node dist/server.js"]

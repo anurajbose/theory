@@ -1,0 +1,89 @@
+# Production-parity stack (staging). Built images, no source mounts,
+# NODE_ENV=production, healthchecks, restart policies, secrets via env.
+#   docker compose -f docker-compose.staging.yml up -d --build
+# Required env (see .env.example): JWT_SECRET, JWT_REFRESH_SECRET,
+# JOURNAL_SECRET, DATABASE_URL/POSTGRES_*, plus any optional integrations.
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pulse_db}
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-pulse} -d ${POSTGRES_DB:-pulse_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes: ['redisdata:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  opensearch:
+    image: opensearchproject/opensearch:2.13.0
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - 'OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m'
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    volumes: ['osdata:/usr/share/opensearch/data']
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    restart: always
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pulse_db}
+      REDIS_URL: redis://redis:6379
+      OPENSEARCH_URL: http://opensearch:9200
+      QUEUES_ENABLED: ${QUEUES_ENABLED:-true}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      JOURNAL_SECRET: ${JOURNAL_SECRET:?set JOURNAL_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL}
+      APP_URL: ${APP_URL:?set APP_URL}
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_PROVIDER_URL: ${AI_PROVIDER_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-THEORY <no-reply@theory.local>}
+    ports: ['4000:4000']
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:4000/ready']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  pgdata:
+  redisdata:
+  osdata:
