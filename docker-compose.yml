@@ -1,0 +1,115 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulse_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pulse_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pulse -d pulse_db']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis (BullMQ queues) ───────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: pulse_redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── OpenSearch (search; app is resilient if this is down) ───────────────────
+  opensearch:
+    image: opensearchproject/opensearch:2.13.0
+    container_name: pulse_opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - 'OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m'
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - '9200:9200'
+
+  # ── API (Node.js + Express) ─────────────────────────────────────────────────
+  api:
+    build:
+      context: .                  # repo root — Dockerfile COPYs from backend/ and database/
+      dockerfile: backend/Dockerfile
+    container_name: pulse_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://pulse:password@postgres:5432/pulse_db
+      REDIS_URL: redis://redis:6379
+      QUEUES_ENABLED: ${QUEUES_ENABLED:-true}
+      OPENSEARCH_URL: ${OPENSEARCH_URL:-http://opensearch:9200}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production_64chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_secret_change_in_production_64chars}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      JOURNAL_SECRET: ${JOURNAL_SECRET:-dev_journal_secret_change_in_production}
+      PORT: 4000
+      NODE_ENV: ${NODE_ENV:-development}
+      FRONTEND_URL: http://localhost:3000
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./backend/src:/app/src   # hot-reload in dev
+      - ./database:/database     # schema + seed accessible
+    command: >
+      sh -c "
+        npx prisma migrate deploy --schema=/database/schema.prisma &&
+        npx prisma generate --schema=/database/schema.prisma &&
+        npx ts-node /database/seed.ts &&
+        npm run dev
+      "
+
+  # ── Frontend (React + Vite) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pulse_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:4000        # used by vite.config.ts proxy; local dev defaults to localhost:4000
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend/src:/app/src  # hot-reload in dev
+
+volumes:
+  postgres_data:
+  redis_data:
+  opensearch_data:

@@ -1,0 +1,137 @@
+# PRODUCTION stack — hardened. Built images, resource caps, dropped caps,
+# no-new-privileges, log rotation, internal-only datastores, automated backups.
+#   docker compose -f docker-compose.prod.yml up -d --build
+# Datastores expose NO host ports (reachable only on the internal network).
+# Front this with a TLS-terminating reverse proxy / ALB → api:4000.
+version: '3.9'
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '5' } # rotation = log-ship baseline
+x-hardening: &hardening
+  restart: always
+  security_opt: ['no-new-privileges:true']
+  cap_drop: ['ALL']
+
+networks:
+  internal: { driver: bridge }
+
+services:
+  postgres:
+    <<: [*logging, *hardening]
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pulse_db}
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    networks: ['internal']
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-pulse} -d ${POSTGRES_DB:-pulse_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    <<: [*logging, *hardening]
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory', '256mb', '--maxmemory-policy', 'allkeys-lru']
+    volumes: ['redisdata:/data']
+    networks: ['internal']
+    mem_limit: 320m
+    cpus: 0.5
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  opensearch:
+    <<: [*logging, *hardening]
+    image: opensearchproject/opensearch:2.13.0
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - 'OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m'
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    volumes: ['osdata:/usr/share/opensearch/data']
+    networks: ['internal']
+    mem_limit: 1g
+    cpus: 1.0
+
+  api:
+    <<: [*logging, *hardening]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pulse_db}
+      REDIS_URL: redis://redis:6379
+      OPENSEARCH_URL: http://opensearch:9200
+      QUEUES_ENABLED: ${QUEUES_ENABLED:-true}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      JOURNAL_SECRET: ${JOURNAL_SECRET:?set JOURNAL_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL}
+      APP_URL: ${APP_URL:?set APP_URL}
+      OTEL_ENABLED: ${OTEL_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_PROVIDER_URL: ${AI_PROVIDER_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      EXPORT_DIR: /tmp/theory-exports
+    networks: ['internal']
+    ports: ['4000:4000'] # front with TLS proxy/ALB
+    read_only: true
+    tmpfs: ['/tmp:size=256m']
+    mem_limit: 1g
+    cpus: 2.0
+    pids_limit: 512
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:4000/ready']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  # Automated nightly logical backups with retention pruning.
+  db-backup:
+    <<: [*logging, *hardening]
+    image: postgres:15-alpine
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    volumes: ['pgbackups:/backups']
+    networks: ['internal']
+    entrypoint:
+      - sh
+      - -c
+      - >
+        while true; do
+          TS=$$(date -u +%Y%m%dT%H%M%SZ);
+          pg_dump -h postgres -U ${POSTGRES_USER:-pulse} ${POSTGRES_DB:-pulse_db}
+            | gzip > /backups/theory-$$TS.sql.gz
+            && echo "backup theory-$$TS.sql.gz OK";
+          find /backups -name '*.sql.gz' -mtime +$${BACKUP_RETENTION_DAYS} -delete;
+          sleep 86400;
+        done
+
+volumes:
+  pgdata:
+  redisdata:
+  osdata:
+  pgbackups:

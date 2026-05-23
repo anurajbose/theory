@@ -1,0 +1,27 @@
+# ── Secrets (NEVER commit) ──
+.env
+.env.*
+!.env.example
+
+# ── Dependencies / build ──
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# ── Ops artifacts ──
+backups/
+*.sql
+*.sql.gz
+!database/migrations/**/*.sql
+
+# ── Local / editor ──
+*.log
+.DS_Store
+.idea/
+.vscode/
+tmp/
+
+# Private credentials — never commit
+CREDENTIALS.md

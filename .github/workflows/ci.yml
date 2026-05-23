@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Typecheck + full test suite against real Postgres + Redis ──
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: pulse
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: pulse_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pulse -d pulse_db"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://pulse:password@localhost:5432/pulse_db
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      QUEUES_ENABLED: 'false'
+      JWT_SECRET: ci_jwt_secret_change_me_0000000000000000
+      JWT_REFRESH_SECRET: ci_refresh_secret_change_me_00000000000
+      JOURNAL_SECRET: ci_journal_secret_change_me
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm', cache-dependency-path: backend/package-lock.json }
+      - run: npm ci
+      - run: npx prisma generate --schema=../database/schema.prisma
+      - run: npx prisma migrate deploy --schema=../database/schema.prisma
+      - run: npm run typecheck
+      - run: npm test
+
+  # ── Frontend: typecheck + production build ──
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm', cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Production build
+        env:
+          # Build must succeed without these set — they're read at runtime
+          # in the SPA, but tsc / vite needs them defined to avoid warnings.
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY || '' }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || '' }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY || '' }}
+        run: npm run build
+      - name: Upload build artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+  # ── Dependency scan (fails build on HIGH/CRITICAL) ──
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: npm audit (backend)
+        working-directory: backend
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (frontend)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
+  # ── Docker images build (validate Dockerfiles; no push) ──
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t theory-backend:ci ./backend
+      - run: docker build -t theory-frontend:ci ./frontend
+
+  # ── Migration discipline: deploy, then re-apply every migration
+  #    to PROVE idempotency (all our SQL is guarded / IF NOT EXISTS) ──
+  migration-idempotency:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: pulse
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: pulse_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pulse -d pulse_db"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://pulse:password@localhost:5432/pulse_db
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm', cache-dependency-path: backend/package-lock.json }
+      - run: npm ci
+      - run: npx prisma validate --schema=../database/schema.prisma
+      - run: npx prisma migrate deploy --schema=../database/schema.prisma
+      - name: Re-apply every migration (must succeed → idempotent)
+        run: |
+          set -e
+          for f in $(ls -d ../database/migrations/*/ | sort); do
+            echo "re-applying ${f}migration.sql"
+            npx prisma db execute --file "${f}migration.sql" --schema=../database/schema.prisma
+          done
