@@ -15,11 +15,8 @@ import FollowUpsPage  from './pages/FollowUps';
 import TimeLogPage    from './pages/TimeLog';
 import MeetingsPage   from './pages/Meetings';
 import IdeasPage      from './pages/Ideas';
-import ManagerPage        from './pages/Manager';
-import OrgPulsePage       from './pages/OrgPulse';
 import KnowledgeBasePage  from './pages/KnowledgeBase';
 import AdminPage          from './pages/Admin';
-import ReportsPage        from './pages/Reports';
 import AppLayout      from './components/layout/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRoute       from './components/RoleRoute';
@@ -70,11 +67,11 @@ export default function App() {
           <Route path="/kb"         element={<KnowledgeBasePage />} />
 
           {/* Intelligence — one role-adaptive surface that replaces
-              Manager / Org Pulse / Reports. Legacy URLs redirect. */}
+              Manager / Org Intelligence / Reports. Legacy URLs redirect. */}
           <Route element={<RoleRoute allow={['MANAGER', 'LEADERSHIP', 'ADMIN']} />}>
             <Route path="/intelligence" element={<Intelligence />} />
             <Route path="/manager"      element={<Navigate to="/intelligence" replace />} />
-            <Route path="/org-pulse"    element={<Navigate to="/intelligence" replace />} />
+            <Route path="/org-intelligence" element={<Navigate to="/intelligence" replace />} />
             <Route path="/reports"      element={<Navigate to="/intelligence" replace />} />
           </Route>
           <Route element={<RoleRoute allow={['ADMIN']} />}>

@@ -23,7 +23,7 @@ automatically. `SignalRow` in the UI exposes Ack / Snooze 24h /
 Resolve / Dismiss + 👍 / 👎.
 
 ## Sprint 3 · Intelligence Surface ✅
-Three overlapping dashboards (Manager · Org Pulse · Reports)
+Three overlapping dashboards (Manager · Org Intelligence · Reports)
 collapsed into **one** role-adaptive `pages/Intelligence.tsx` page.
 `MANAGER` lands on Team scope; `LEADERSHIP`/`ADMIN` get a Team/Org
 toggle. Legacy URLs preserved as redirects. Composed entirely from

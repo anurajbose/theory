@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────
 # THEORY API — production container.
-# Build context MUST be the repo root (pulse/) so we can include
+# Build context MUST be the repo root (theory/) so we can include
 # the shared Prisma schema at ../database/. From the repo root:
 #   docker build -f backend/Dockerfile -t theory-api .
 # Railway: set the root directory to / and dockerfilePath to backend/Dockerfile.

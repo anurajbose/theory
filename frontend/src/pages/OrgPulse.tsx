@@ -140,7 +140,7 @@ function TeamTile({ team }: { team: TeamSignalRow }) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════ */
-export default function OrgPulsePage() {
+export default function OrgIntelligencePage() {
   const [overview,    setOverview]    = useState<OrgOverview | null>(null);
   const [teamSignals, setTeamSignals] = useState<TeamSignalRow[]>([]);
   const [blockers,    setBlockers]    = useState<OrgBlocker[]>([]);
@@ -212,7 +212,7 @@ export default function OrgPulsePage() {
         style={{ borderBottom: '1px solid var(--m3-outline-v)' }}
       >
         <div>
-          <h2 className="font-semibold text-base" style={{ color: 'var(--m3-on-surf)' }}>Org Pulse</h2>
+          <h2 className="font-semibold text-base" style={{ color: 'var(--m3-on-surf)' }}>Org Intelligence</h2>
           <p className="text-xs mt-0.5" style={{ color: 'var(--m3-on-surf-var)' }}>
             Leadership view · {overview?.userCount ?? 0} people · {overview?.teamCount ?? 0} teams
           </p>

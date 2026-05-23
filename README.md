@@ -19,7 +19,7 @@
 | **Ideas** | Idea board with voting |
 | **Signals** | Automatic weekly roll-up (blockers, overdue, mood trend) sent up the hierarchy |
 | **Manager console** | Team signal dashboard — aggregated, no raw content ever surfaced |
-| **Org Pulse / Intelligence** | Leadership view across business units and departments |
+| **Org Intelligence** | Leadership view across business units and departments |
 | **Knowledge base** | Team-scoped wiki |
 | **Announcements** | Org-wide pinned messages |
 | **Admin panel** | User management, hierarchy editor, billing, branding |
@@ -52,8 +52,8 @@ Open **http://localhost:3000**
 
 ```bash
 # 1 — Database + Redis
-docker run -d -e POSTGRES_USER=pulse -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=pulse_db -p 5432:5432 postgres:15-alpine
+docker run -d -e POSTGRES_USER=theory -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=theory_db -p 5432:5432 postgres:15-alpine
 
 docker run -d -p 6379:6379 redis:7-alpine
 
