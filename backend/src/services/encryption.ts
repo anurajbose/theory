@@ -7,7 +7,7 @@ const TAG_LEN = 16;
 
 function getKey(): Buffer {
   const secret = process.env.JOURNAL_SECRET || process.env.JWT_SECRET || '';
-  return crypto.scryptSync(secret, 'pulse-journal-salt', KEY_LEN);
+  return crypto.scryptSync(secret, 'theory-journal-salt', KEY_LEN);
 }
 
 export function encrypt(plaintext: string): string {

@@ -9,7 +9,7 @@ import { sendMail } from '../core/mailer';
 import logger from '../utils/logger';
 
 /* ═══════════════════════════════════════════════════════
-   PULSE — 7 Scheduled Jobs
+   theory — 7 Scheduled Jobs
    All times IST (UTC+5:30) expressed as UTC for cron
    ═══════════════════════════════════════════════════════ */
 

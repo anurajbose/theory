@@ -49,7 +49,7 @@ const COMMANDS: Command[] = [
   { id: 'nav-kb',       label: 'Knowledge Base',   group: 'Navigate', icon: BookOpen,      keywords: 'docs wiki notes',    run: (c) => c.navigate('/kb') },
   { id: 'nav-reports',  label: 'Reports',          group: 'Navigate', icon: BarChart3,     keywords: 'analytics export',   run: (c) => c.navigate('/reports') },
   { id: 'nav-manager',  label: 'Manager Console',  group: 'Navigate', icon: Radar,         keywords: 'team signals',       roles: ['MANAGER', 'LEADERSHIP', 'ADMIN'], run: (c) => c.navigate('/manager') },
-  { id: 'nav-pulse',    label: 'Org Pulse',        group: 'Navigate', icon: Building2,     keywords: 'leadership health',  roles: ['LEADERSHIP', 'ADMIN'],            run: (c) => c.navigate('/org-pulse') },
+  { id: 'nav-intel',    label: 'Org Intelligence', group: 'Navigate', icon: Building2,     keywords: 'leadership health intelligence', roles: ['LEADERSHIP', 'ADMIN'],            run: (c) => c.navigate('/intelligence') },
   { id: 'nav-admin',    label: 'Admin Panel',      group: 'Navigate', icon: Shield,        keywords: 'settings users',     roles: ['ADMIN'],                          run: (c) => c.navigate('/admin') },
 
   { id: 'new-task',     label: 'New work item',    group: 'Create',   icon: Plus,          hint: 'Open board',  keywords: 'add create task card', run: (c) => c.navigate('/board?new=1') },

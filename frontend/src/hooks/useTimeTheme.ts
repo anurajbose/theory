@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 
-const STORAGE_KEY = 'pulse-theme-v2';
+const STORAGE_KEY = 'theory-theme-v2';
 
 function readStored(): ThemeMode {
   try {

@@ -37,7 +37,7 @@ export async function completeOnboarding(req: Request, res: Response): Promise<v
       data: {
         userId,
         type: 'SYSTEM',
-        message: `Welcome to PULSE, ${user.name}! Your workspace is ready.`,
+        message: `Welcome to theory, ${user.name}! Your workspace is ready.`,
       },
     });
 

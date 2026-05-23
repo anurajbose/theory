@@ -23,7 +23,7 @@ const COMMON: NavItem[] = [
 ];
 
 // One role-adaptive Intelligence surface replaces the old Manager
-// console, Org Pulse and Reports trio. Visible to MANAGER+; the page
+// console, Org Intelligence and Reports trio. Visible to MANAGER+; the page
 // itself adapts (Team vs Organisation) based on the user's role.
 const MANAGER_ITEMS: NavItem[]    = [{ path: '/intelligence', icon: BarChart3, label: 'Intelligence' }];
 const LEADERSHIP_ITEMS: NavItem[] = [];

@@ -234,7 +234,7 @@ function GraphicDoc({ accent }: { accent: string }) {
     </svg>
   );
 }
-function GraphicPulseGrid({ accent }: { accent: string }) {
+function GraphicSignalGrid({ accent }: { accent: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-end' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 10px)', gap: 11 }}>
@@ -360,7 +360,7 @@ function SceneScale({ accent }: { accent: string }) {
           <span style={{ fontFamily: FONT.serif, fontStyle: 'italic', color: accent }}>theory keeps the beat.</span>
         </motion.p>
       </div>
-      <GraphicPulseGrid accent={accent} />
+      <GraphicSignalGrid accent={accent} />
     </div>
   );
 }

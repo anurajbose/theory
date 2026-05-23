@@ -18,12 +18,12 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: pulse
+          POSTGRES_USER: theory
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: pulse_db
+          POSTGRES_DB: theory_db
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U pulse -d pulse_db"
+          --health-cmd "pg_isready -U theory -d theory_db"
           --health-interval 5s --health-timeout 5s --health-retries 20
       redis:
         image: redis:7-alpine
@@ -32,7 +32,7 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s
           --health-timeout 3s --health-retries 20
     env:
-      DATABASE_URL: postgresql://pulse:password@localhost:5432/pulse_db
+      DATABASE_URL: postgresql://theory:password@localhost:5432/theory_db
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
       QUEUES_ENABLED: 'false'
@@ -110,15 +110,15 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: pulse
+          POSTGRES_USER: theory
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: pulse_db
+          POSTGRES_DB: theory_db
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U pulse -d pulse_db"
+          --health-cmd "pg_isready -U theory -d theory_db"
           --health-interval 5s --health-timeout 5s --health-retries 20
     env:
-      DATABASE_URL: postgresql://pulse:password@localhost:5432/pulse_db
+      DATABASE_URL: postgresql://theory:password@localhost:5432/theory_db
     defaults:
       run:
         working-directory: backend

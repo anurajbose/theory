@@ -21,7 +21,7 @@ import {
 
 /* ═══════════════════════════════════════════════════════════════
    INTELLIGENCE · one role-adaptive operational surface.
-   Replaces three overlapping pages (Manager · Org Pulse · Reports)
+   Replaces three overlapping pages (Manager · Org Intelligence · Reports)
    with one credible view that adapts to scope:
      · MANAGER       → Team
      · LEADERSHIP    → Organisation (+ optional Team if they manage)

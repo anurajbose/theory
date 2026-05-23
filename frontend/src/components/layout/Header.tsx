@@ -37,7 +37,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/kb':         'Knowledge Base',
   '/reports':    'Reports',
   '/manager':    'Manager Console',
-  '/org-pulse':  'Org Pulse',
+  '/org-intelligence': 'Org Intelligence',
   '/risk-radar': 'Risk Radar',
   '/admin':      'Admin Panel',
 };

@@ -1,5 +1,5 @@
 {
-  "name": "pulse-backend",
+  "name": "theory-backend",
   "version": "1.0.0",
   "description": "theory — Work Nervous System Backend",
   "main": "dist/server.js",
