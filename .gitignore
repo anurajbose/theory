@@ -5,6 +5,7 @@
 
 # ── Dependencies / build ──
 node_modules/
+database/node_modules
 dist/
 build/
 coverage/
