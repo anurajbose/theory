@@ -11,7 +11,7 @@ export interface Branding {
 }
 
 const DEFAULTS: Branding = {
-  brandName: 'THEORY',
+  brandName: 'theory',
   primaryColor: '#5457E5',
   accentColor: null,
   logoUrl: null,

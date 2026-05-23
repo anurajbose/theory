@@ -690,12 +690,12 @@ function LoginPanel(p: PanelProps) {
           </div>
           <div className="text-center pt-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <span className="text-[10.5px]" style={{ color: 'rgba(255,255,255,0.20)' }}>No account? </span>
-            <button onClick={p.onRequestAccess} onMouseEnter={() => setLinkH(true)} onMouseLeave={() => setLinkH(false)}
+            <Link to="/register" onMouseEnter={() => setLinkH(true)} onMouseLeave={() => setLinkH(false)}
               className="text-[10.5px] font-medium relative" style={{ color: p.accent, transition: 'color 1.1s cubic-bezier(0.65,0,0.35,1)' }}>
-              Request access →
+              Create account →
               <motion.span style={{ position: 'absolute', left: 0, bottom: -2, height: 1, background: p.accent }}
                 animate={{ width: linkH ? '100%' : '0%' }} transition={{ duration: 0.28, ease: EXPO }} />
-            </button>
+            </Link>
           </div>
         </div>
       </motion.div>

@@ -10,15 +10,80 @@ import { writeAudit } from '../core/audit';
 import { sendMail } from '../core/mailer';
 import { verifyCaptcha } from '../core/captcha';
 import {
-  issueSession, signMfaChallenge, hashToken,
+  issueSession, signMfaChallenge, hashToken, DEFAULT_TENANT,
 } from '../core/session';
 
 /* ── schemas ── */
+export const registerSchema = z.object({
+  name:     z.string().min(2).max(100),
+  email:    z.string().email(),
+  password: z.string().min(8).max(128),
+});
 export const forgotSchema = z.object({ email: z.string().email() });
 export const resetSchema = z.object({
   token: z.string().min(20),
   password: z.string().min(8).max(128),
 });
+
+export async function register(req: Request, res: Response): Promise<void> {
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten() });
+    return;
+  }
+  const { name, email, password } = parsed.data;
+  const ip = req.ip ?? null;
+  const ua = (req.headers['user-agent'] as string) ?? null;
+  try {
+    const existing = await rawPrisma.user.findFirst({
+      where: { email: email.toLowerCase() },
+      select: { id: true },
+    });
+    if (existing) {
+      res.status(409).json({ error: 'An account with that email already exists' });
+      return;
+    }
+
+    // First registered user becomes ADMIN; everyone else gets EMPLOYEE.
+    const count = await rawPrisma.user.count({ where: { tenantId: DEFAULT_TENANT } });
+    const role = count === 0 ? 'ADMIN' : 'EMPLOYEE';
+
+    const passwordHash = await hashPassword(password);
+    const user = await rawPrisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        passwordHash,
+        role,
+        tenantId: DEFAULT_TENANT,
+        active: true,
+        onboarded: false,
+      },
+      include: {
+        dept: { select: { id: true, name: true } },
+        team: { select: { id: true, name: true } },
+      },
+    });
+
+    await writeAudit({
+      action: 'auth.register', entity: 'User', entityId: user.id,
+      userId: user.id, tenantId: user.tenantId, ip, userAgent: ua,
+    });
+
+    const { accessToken, refreshToken } = await issueSession(user, req);
+    res.status(201).json({
+      accessToken, refreshToken,
+      user: {
+        id: user.id, name: user.name, email: user.email, role: user.role,
+        jobRole: user.jobRole, onboarded: user.onboarded,
+        dept: user.dept, team: user.team, managerId: user.managerId,
+      },
+    });
+  } catch (err) {
+    logger.error('Register error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password, captchaToken } = req.body;

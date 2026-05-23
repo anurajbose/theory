@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  register, registerSchema,
   login, refresh, logout, me,
   forgotPassword, resetPassword, forgotSchema, resetSchema,
 } from '../controllers/authController';
@@ -19,6 +20,7 @@ import { asyncHandler } from '../core/http';
 const router = Router();
 
 // ── Public ──
+router.post('/register', authLimiter, validate({ body: registerSchema }), asyncHandler(register));
 router.post('/login', loginLimiter, authLimiter, login);
 router.post('/google', authLimiter, googleAuth);
 router.post('/refresh', authLimiter, refresh);

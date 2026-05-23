@@ -20,6 +20,7 @@ import AdminPage          from './pages/Admin';
 import AppLayout      from './components/layout/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRoute       from './components/RoleRoute';
+import Register        from './pages/Register';
 import Landing         from './pages/marketing/Landing';
 import HowItWorks      from './pages/marketing/HowItWorks';
 import Pricing         from './pages/marketing/Pricing';
@@ -40,6 +41,7 @@ export default function App() {
     <Routes>
       {/* Public — legacy JWT auth */}
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
