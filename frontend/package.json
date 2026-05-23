@@ -1,6 +1,8 @@
 {
   "name": "theory-frontend",
   "version": "1.0.0",
+  "description": "theory — work intelligence platform web app (React + Vite + Tailwind)",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

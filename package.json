@@ -1,5 +1,27 @@
 {
   "name": "theory",
+  "version": "1.0.0",
+  "description": "Private-by-design work intelligence platform. Employees log their day, managers see the signal, leadership sees org health — raw notes never travel up.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anurajbose/theory.git"
+  },
+  "homepage": "https://github.com/anurajbose/theory#readme",
+  "bugs": {
+    "url": "https://github.com/anurajbose/theory/issues"
+  },
+  "keywords": [
+    "work-intelligence",
+    "productivity",
+    "team-management",
+    "self-hosted",
+    "typescript",
+    "react",
+    "nodejs",
+    "postgresql",
+    "prisma"
+  ],
   "devDependencies": {
     "prisma": "^5.22.0"
   },
