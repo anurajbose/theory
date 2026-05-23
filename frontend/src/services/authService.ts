@@ -14,6 +14,18 @@ export interface AuthUser {
   team: { id: string; name: string } | null;
 }
 
+export async function registerRequest(
+  name: string,
+  email: string,
+  password: string,
+) {
+  const res = await axios.post('/api/auth/register', { name, email, password });
+  return unwrap<{ accessToken: string; refreshToken: string; user: AuthUser }>(
+    res.data,
+    res.status,
+  );
+}
+
 export async function loginRequest(email: string, password: string, captchaToken?: string) {
   const res = await axios.post('/api/auth/login', { email, password, captchaToken });
   // bare axios bypasses the api interceptor → unwrap the envelope here

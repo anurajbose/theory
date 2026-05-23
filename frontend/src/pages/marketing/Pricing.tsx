@@ -30,6 +30,7 @@ const TIERS = [
     period: 'forever',
     note: 'For teams of up to 10. Free, always.',
     cta: 'Start a workspace',
+    free: false,
     feats: [
       'Daily mission control + signal engine',
       'Signal lifecycle (ack · snooze · resolve)',
@@ -92,8 +93,8 @@ const FAQ = [
     a: "Per organisation, not per user account. One subscription covers every member of the workspace. Growth is per-seat / month; Enterprise is an annual contract negotiated directly.",
   },
   {
-    q: 'Is THEORY open source?',
-    a: "No. THEORY is proprietary software — copyright THEORY, all rights reserved. We may publish components or SDKs under permissive licences in the future, but the product is not redistributable.",
+    q: 'Is theory open source?',
+    a: "Yes — theory is MIT licensed. You can self-host, fork, and contribute. Find us on GitHub.",
   },
   {
     q: 'Can I trust you with my data?',
@@ -114,7 +115,7 @@ function Bar({ brand }: { brand: string }) {
           <Link to="/pricing" className="text-white">Pricing</Link>
           <Link to="/security" className="hover:text-white transition-colors">Security</Link>
           <Link
-            to="/sign-up"
+            to="/register"
             className="rounded-full px-4 py-1.5 text-white"
             style={{ background: 'var(--brand-primary,#7C3AED)' }}
           >

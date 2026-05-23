@@ -31,7 +31,7 @@ function Nav({ brand }: { brand: string }) {
           <Link to="/pricing" className="hidden sm:block hover:text-white transition-colors">Pricing</Link>
           <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
           <Link
-            to="/login"
+            to="/register"
             className="rounded-full px-4 py-2 text-[13px] font-medium text-white transition-transform hover:-translate-y-0.5"
             style={{ background: 'var(--brand-primary, #5457E5)' }}
           >
@@ -109,7 +109,7 @@ function Hero({ brand }: { brand: string }) {
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <Link
-            to="/login"
+            to="/register"
             className="group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[15px] font-medium text-white transition-transform hover:-translate-y-0.5"
             style={{ background: 'var(--brand-primary,#5457E5)', boxShadow: '0 10px 40px -10px rgba(84,87,229,0.6)' }}
           >
@@ -303,7 +303,7 @@ function PricingTeaser() {
 
       <div className="mt-9 flex items-center justify-center gap-3">
         <Link
-          to="/sign-up"
+          to="/register"
           className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14.5px] font-medium text-white"
           style={{ background: 'var(--brand-primary,#7C3AED)', boxShadow: '0 10px 40px -10px rgba(124,58,237,0.5)' }}
         >
@@ -333,7 +333,7 @@ function CTA({ brand }: { brand: string }) {
           Bring {brand} to your organisation today — free for your first team.
         </p>
         <Link
-          to="/login"
+          to="/register"
           className="mt-9 inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-medium text-white transition-transform hover:-translate-y-0.5"
           style={{ background: 'var(--brand-primary,#5457E5)', boxShadow: '0 10px 40px -10px rgba(84,87,229,0.6)' }}
         >
